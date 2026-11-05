@@ -1,0 +1,13 @@
+import { ArrowLeft, ClipboardList } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { getApplications, updateApplicationStatus } from '../../api/applicationsApi';
+import { getJob } from '../../api/jobsApi';
+import { getApiErrorMessage } from '../../api/errorHandler';
+import type { Application, ApplicationStatus } from '../../types/application';
+import type { Job } from '../../types/job';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { ErrorMessage } from '../../components/ErrorMessage';
+
+const statuses: ApplicationStatus[] = ['Pending', 'Reviewed', 'Accepted', 'Rejected', 'Withdrawn'];
+export function JobApplicationsPage() { const { id } = useParams(); const [job, setJob] = useState<Job | null>(null); const [items, setItems] = useState<Application[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); useEffect(() => { if (!id) return; Promise.all([getJob(Number(id)), getApplications()]).then(([j, a]) => { setJob(j); setItems(a.filter((x) => x.jobId === Number(id))); }).catch((e) => setError(getApiErrorMessage(e))).finally(() => setLoading(false)); }, [id]); const change = async (item: Application, status: ApplicationStatus) => { try { const updated = await updateApplicationStatus(item.id, status); setItems((all) => all.map((x) => x.id === item.id ? updated : x)); } catch (e) { setError(getApiErrorMessage(e)); } }; if (loading) return <LoadingSpinner />; if (error) return <ErrorMessage message={error} />; return <div><Link className="back-link" to="/recruiter/jobs"><ArrowLeft size={16} /> Back to my jobs</Link><div className="page-heading"><div><p className="eyebrow">CANDIDATE PIPELINE</p><h1>{job?.title ?? 'Job applications'}</h1><p>Review and update candidates for this role.</p></div></div>{items.length === 0 ? <div className="empty panel"><ClipboardList size={30} /><h3>No applications yet</h3><p>Applications will appear here when candidates apply.</p></div> : <section className="panel table-wrap"><table><thead><tr><th>Candidate</th><th>Applied</th><th>Cover letter</th><th>Status</th></tr></thead><tbody>{items.map((item) => <tr key={item.id}><td><strong>{item.candidateName}</strong></td><td>{new Date(item.appliedAt).toLocaleDateString()}</td><td>{item.coverLetter ? `${item.coverLetter.slice(0, 60)}${item.coverLetter.length > 60 ? '...' : ''}` : '—'}</td><td><select value={item.status} onChange={(e) => void change(item, e.target.value as ApplicationStatus)}>{statuses.map((status) => <option key={status}>{status}</option>)}</select></td></tr>)}</tbody></table></section>}</div>; }

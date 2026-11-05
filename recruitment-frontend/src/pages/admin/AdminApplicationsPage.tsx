@@ -1,0 +1,7 @@
+import { useEffect, useState } from 'react';
+import { getApplications } from '../../api/applicationsApi';
+import { getApiErrorMessage } from '../../api/errorHandler';
+import type { Application } from '../../types/application';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { ErrorMessage } from '../../components/ErrorMessage';
+export function AdminApplicationsPage() { const [items, setItems] = useState<Application[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); useEffect(() => { getApplications().then(setItems).catch((e) => setError(getApiErrorMessage(e))).finally(() => setLoading(false)); }, []); if (loading) return <LoadingSpinner />; return <div><div className="page-heading"><div><p className="eyebrow">ADMINISTRATION</p><h1>All applications</h1><p>System-wide application visibility from the existing API.</p></div></div>{error && <ErrorMessage message={error} />}{items.length === 0 ? <div className="empty panel"><h3>No applications found</h3></div> : <section className="panel table-wrap"><table><thead><tr><th>Candidate</th><th>Job</th><th>Recruiter</th><th>Applied</th><th>Status</th></tr></thead><tbody>{items.map((item) => <tr key={item.id}><td>{item.candidateName}</td><td>{item.jobTitle}</td><td>{item.recruiterName}</td><td>{new Date(item.appliedAt).toLocaleDateString()}</td><td><span className={`status status-${item.status.toLowerCase()}`}>{item.status}</span></td></tr>)}</tbody></table></section>}</div>; }

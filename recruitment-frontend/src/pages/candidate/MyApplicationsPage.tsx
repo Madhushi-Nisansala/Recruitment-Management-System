@@ -1,0 +1,9 @@
+import { ClipboardList, Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { getApplications } from '../../api/applicationsApi';
+import { getApiErrorMessage } from '../../api/errorHandler';
+import type { Application } from '../../types/application';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { ErrorMessage } from '../../components/ErrorMessage';
+
+export function MyApplicationsPage() { const [items, setItems] = useState<Application[]>([]); const [term, setTerm] = useState(''); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); useEffect(() => { getApplications().then(setItems).catch((e) => setError(getApiErrorMessage(e))).finally(() => setLoading(false)); }, []); const filtered = useMemo(() => items.filter((x) => `${x.jobTitle} ${x.status}`.toLowerCase().includes(term.toLowerCase())), [items, term]); return <div><div className="page-heading"><div><p className="eyebrow">YOUR PROGRESS</p><h1>My applications</h1><p>Review every opportunity you have applied for.</p></div></div><div className="search-bar"><Search size={18} /><input placeholder="Search jobs or statuses" value={term} onChange={(e) => setTerm(e.target.value)} /></div>{loading ? <LoadingSpinner /> : error ? <ErrorMessage message={error} /> : filtered.length === 0 ? <div className="empty panel"><ClipboardList size={30} /><h3>No applications found</h3><p>Applications you submit will appear here.</p></div> : <section className="panel table-wrap"><table><thead><tr><th>Job</th><th>Recruiter</th><th>Applied</th><th>Status</th></tr></thead><tbody>{filtered.map((item) => <tr key={item.id}><td><strong>{item.jobTitle}</strong></td><td>{item.recruiterName}</td><td>{new Date(item.appliedAt).toLocaleDateString()}</td><td><span className={`status status-${item.status.toLowerCase()}`}>{item.status}</span></td></tr>)}</tbody></table></section>}</div>; }

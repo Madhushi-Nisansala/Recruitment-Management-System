@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/RecruitmentManagementSystem.IntegrationTests/RecruitmentManagementSystem.IntegrationTests.csproj" />
+  </Folder>
+  <Project Path="Recruitment Management System/Recruitment Management System.csproj" />
+</Solution>
